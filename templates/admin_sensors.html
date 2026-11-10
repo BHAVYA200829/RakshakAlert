@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}IoT Sensor Simulator{% endblock %}
+{% block content %}
+<section class="hero">
+  <h1>IoT sensor simulator</h1>
+  <p>Simulated sensors on every tower. A reading over its threshold auto-creates an alert for that tower, with auto-severity. All readings are simulated demo data - no real sensors are connected.</p>
+</section>
+<div class="card">
+  <h2>Trigger a test sensor event (demo)</h2>
+  <p class="sub">Pick a tower and sensor, force its reading over the threshold, and watch an auto-alert appear.</p>
+  <form method="post" action="{{ url_for('admin_sensor_trigger_test') }}">
+    <label for="tt-tower">Tower</label>
+    <select id="tt-tower" name="tower_id" required>
+      <option value="2">Mira Road - Mira Road Station</option>
+      <option value="5">Nashik - Nashik Central</option>
+      <option value="1">Mumbai - Mumbai Central</option>
+      <option value="6">Pune - Pune Shivajinagar</option>
+    </select>
+    <label for="tt-sensor">Sensor</label>
+    <select id="tt-sensor" name="sensor_type">
+      <option value="water_level">Water level (threshold 2.5 m) - Flood</option>
+      <option value="rainfall">Rainfall (threshold 50 mm/hr) - Heavy Rainfall</option>
+      <option value="tremor">Tremor (threshold 5.0 magnitude) - Earthquake</option>
+      <option value="temperature">Temperature (threshold 45 C) - Heatwave</option>
+    </select>
+    <div class="step-nav"><button class="btn btn-red" type="submit">Trigger test sensor event</button></div>
+  </form>
+</div>
+<div class="card">
+  <h2>All sensors - live readings</h2>
+  <p class="sub">360 sensors (6 per tower × 60 towers). "Simulate reading" ticks one reading; if it crosses the threshold an auto-alert is created.</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Tower</th><th>Sensor</th><th>Reading</th><th>Threshold</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+      {% for s in items %}
+      <tr>
+        <td><strong>{{ s.city }}</strong><br><span style="color:#5b5b5b">{{ s.state }}</span></td>
+        <td>{{ s.sensor_type }}</td>
+        <td><strong>{{ s.current_value }} {{ s.unit }}</strong></td>
+        <td>{{ s.threshold }} {{ s.unit }}</td>
+        <td>{% if s.status == 'warning' %}<span class="sev sev-{{ s.severity }}">{{ s.severity }} - over threshold</span>{% else %}<span class="sev sev-Green">Normal</span>{% endif %}</td>
+        <td><form method="post" action="{{ url_for('admin_sensor_simulate', sensor_id=s.id) }}"><button class="btn btn-sm" type="submit">Simulate reading</button></form></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table></div>
+</div>
+{% endblock %}

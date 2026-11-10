@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}Report an incident{% endblock %}
+{% block content %}
+<section class="hero">
+  <h1>Report an incident</h1>
+  <p>No login needed. Tell us what you see, where you are, and we will pass it to the admin. You get a tracking ID to check the status.</p>
+</section>
+<div class="card">
+  <form method="post" action="{{ url_for('citizen_report') }}" enctype="multipart/form-data" id="report-form">
+    <label for="disaster_type">Disaster type</label>
+    <select id="disaster_type" name="disaster_type" required>
+      <option value="">Choose…</option>
+      {% for dtype in disaster_types %}<option value="{{ dtype }}">{{ dtype }}</option>{% endfor %}
+    </select>
+    <label for="tower_id">Your nearest tower / city</label>
+    <select id="tower_id" name="tower_id" required>
+      <option value="">Choose your city…</option>
+      {% for t in towers %}<option value="{{ t.id }}">{{ t.city }} - {{ t.name }} ({{ t.state }})</option>{% endfor %}
+    </select>
+    <p><button class="btn btn-white" type="button" id="report-gps">Use my location to pick the tower</button></p>
+    <input type="hidden" id="lat" name="lat">
+    <input type="hidden" id="lng" name="lng">
+    <p class="hint" id="gps-note"></p>
+    <label for="description">What do you see?</label>
+    <div class="voice-row">
+      <button class="btn btn-white btn-sm" type="button" id="voice-btn" aria-label="Speak your report">
+        <svg class="mic-icon" viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path fill="currentColor" d="M12 15a3.5 3.5 0 0 0 3.5-3.5v-6a3.5 3.5 0 1 0-7 0v6A3.5 3.5 0 0 0 12 15zm6-3.5a6 6 0 0 1-12 0H4a8 8 0 0 0 7 7.94V22h2v-2.06A8 8 0 0 0 20 11.5h-2z"/></svg>
+        <span id="voice-btn-label">Speak</span>
+      </button>
+      <select id="voice-lang" aria-label="Voice language">
+        <option value="en-IN">English (India)</option>
+        <option value="hi-IN">Hindi</option>
+      </select>
+      <span class="hint" id="voice-status" role="status"></span>
+    </div>
+    <textarea id="description" name="description" placeholder="e.g. Water is rising on the main road near the station, about knee-deep." required></textarea>
+    <p class="hint">Tap Speak and talk instead of typing. Your words appear in the box above. Voice input works in Chrome and Edge.</p>
+    <label for="photo">Photo (optional)</label>
+    <input type="file" id="photo" name="photo" accept="image/png,image/jpeg,image/webp">
+    <p class="hint">Max 5 MB. PNG, JPG or WebP only. The photo is stored on the server for the admin to see.</p>
+    <label for="name">Your name (optional)</label>
+    <input type="text" id="name" name="name" maxlength="80">
+    <label for="phone">Your phone (optional - for a status SMS)</label>
+    <input type="text" id="phone" name="phone" maxlength="20" placeholder="+91 …">
+    <p class="hint">If you give a phone number, you will get a simulated SMS when the status changes. No real SMS is sent in this demo.</p>
+    <div id="offline-note" class="gps-error" style="display:none; margin-top:14px"></div>
+    <div class="step-nav"><button class="btn btn-red" type="submit">Send report</button>
+    <a class="btn btn-white" href="{{ url_for('home') }}">Back to map</a></div>
+  </form>
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/report.js') }}"></script>
+{% endblock %}

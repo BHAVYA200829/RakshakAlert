@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Alert History{% endblock %}
+{% block content %}
+<section class="hero">
+  <h1>Alert history and delivery log</h1>
+  <p>Every broadcast, the towers it reached, and how many citizens received it. All messages are Simulated SMS in this prototype.</p>
+</section>
+{% if items %}
+<div class="card">
+  <div class="table-wrap"><table>
+    <thead><tr><th>Alert</th><th>Severity</th><th>Towers</th><th>Citizens reached</th><th>Sent (UTC)</th><th></th></tr></thead>
+    <tbody>
+      {% for item in items %}
+      <tr>
+        <td><strong>{{ item.alert.title }}</strong><br><span style="color:#5b5b5b">{{ item.alert.disaster_type }}</span></td>
+        <td><span class="sev sev-{{ item.alert.severity }}">{{ item.alert.severity }}</span></td>
+        <td>{{ item.towers|map(attribute='city')|join(', ') }}</td>
+        <td><strong>{{ item.citizens_reached }}</strong></td>
+        <td>{{ item.alert.created_at }}</td>
+        <td><a href="{{ url_for('admin_history_detail', alert_id=item.alert.id) }}">Delivery log</a></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table></div>
+</div>
+{% else %}
+<div class="card"><p class="empty">No alerts sent yet. <a href="{{ url_for('admin_broadcast') }}">Broadcast your first alert</a>.</p></div>
+{% endif %}
+{% endblock %}

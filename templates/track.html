@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Track your report{% endblock %}
+{% block content %}
+<section class="hero">
+  <h1>Track your report</h1>
+  <p>Enter your tracking ID to see the status: Open, Acknowledged or Resolved.</p>
+</section>
+<div class="card">
+  <form method="get" action="{{ url_for('track_report') }}">
+    <label for="track-id">Tracking ID</label>
+    <input type="text" id="track-id" name="id" value="{{ tracking_id }}" placeholder="RA-00001">
+    <div class="step-nav"><button class="btn" type="submit">Check status</button></div>
+  </form>
+  {% if tracking_id %}
+    {% if report %}
+    <div style="margin-top:18px">
+      <p><strong>{{ report.tracking_id }}</strong> - <span class="sev sev-outline">{{ report.status }}</span></p>
+      <p><strong>{{ report.disaster_type }}</strong> ({{ report.severity }}) - {{ report.city }}, {{ report.state }}</p>
+      <p>{{ report.description }}</p>
+      <p class="meta">Reported: {{ report.created_at }} UTC{% if report.photo_filename %} · Photo: {{ report.photo_filename }}{% endif %}</p>
+    </div>
+    {% else %}
+    <p class="empty" style="margin-top:14px">No report found with ID <strong>{{ tracking_id }}</strong>. Check the ID and try again.</p>
+    {% endif %}
+  {% endif %}
+</div>
+{% endblock %}

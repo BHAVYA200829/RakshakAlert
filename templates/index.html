@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+{% block title %}Public Map{% endblock %}
+{% block content %}
+<section class="hero">
+  <h1>{{ t('hero_title') }}</h1>
+  <p>{{ t('hero_sub') }}
+     <strong>{{ t('hero_strong') }}</strong> {{ t('hero_sub2') }}</p>
+</section>
+
+<div class="stats">
+  <div class="stat"><div class="num">{{ tower_count }}</div><div class="label">Alert towers</div></div>
+  <div class="stat"><div class="num">{{ citizen_count }}</div><div class="label">Citizens covered (demo)</div></div>
+  <div class="stat"><div class="num">{{ states|length }}</div><div class="label">States / UTs</div></div>
+  <div class="stat red"><div class="num">{{ alert_count }}</div><div class="label">Alerts sent</div></div>
+</div>
+
+<div class="grid-2">
+  <div>
+    <div class="card">
+      <h2>Live tower map - India</h2>
+      <p class="sub">60 towers, one per city. A red, orange, yellow or green pin means that tower has an active alert. Click a pin for tower details.</p>
+      <div class="toolbar">
+        <div class="field">
+          <label for="tower-search">Search a city or tower</label>
+          <input type="text" id="tower-search" placeholder="Type a city, e.g. Nashik">
+        </div>
+        <div class="field">
+          <label for="state-filter">Filter by state</label>
+          <select id="state-filter">
+            <option value="">All states</option>
+            {% for s in states %}<option value="{{ s }}">{{ s }}</option>{% endfor %}
+          </select>
+        </div>
+      </div>
+      <p style="margin: 0 0 8px;">
+        <button class="btn btn-sm" id="wind-toggle" type="button">Wind: ON</button>
+        <span class="live-label">LIVE</span>
+        <span class="hint" id="wind-updated">Wind readings loading…</span>
+        <span class="hint" id="map-updated">Map updated just now.</span>
+      </p>
+      <div id="map"></div>
+      <p class="legend">
+        <span><span class="dot" style="background:#dc2626"></span>Red - extreme</span>
+        <span><span class="dot" style="background:#ea580c"></span>Orange - high</span>
+        <span><span class="dot" style="background:#ca8a04"></span>Yellow - moderate</span>
+        <span><span class="dot" style="background:#15803d"></span>Green - safe / info</span>
+        <span><span class="dot" style="background:#0f2a44"></span>Navy - no active alert</span>
+        <span><span class="wind-arrow-inline">&#10148;</span> Arrow - wind direction (km/h beside it)</span>
+      </p>
+    </div>
+
+    <div class="card" id="tower-detail" style="display:none">
+      <h2 id="td-name">Tower</h2>
+      <p class="sub" id="td-meta"></p>
+      <div id="td-alerts"></div>
+      <h3>Live sensor readings (simulated)</h3>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Sensor</th><th>Reading</th><th>Threshold</th><th>Status</th></tr></thead>
+        <tbody id="td-sensors"><tr><td colspan="4">Loading readings…</td></tr></tbody>
+      </table></div>
+      <h3>Citizens on this tower (demo)</h3>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Name</th><th>Phone</th></tr></thead>
+        <tbody id="td-citizens"></tbody>
+      </table></div>
+    </div>
+  </div>
+
+  <div>
+    <div class="card" style="border: 2px solid var(--red);">
+      <h2>{{ t('sos_title') }}</h2>
+      <p class="sub">{{ t('sos_sub') }}</p>
+      <button class="btn btn-red btn-block" id="sos-btn" type="button">{{ t('sos_button') }}</button>
+      <p class="hint" id="sos-msg" style="margin-top:10px"></p>
+      <p class="hint">If the button cannot find your tower, use "Use my location" below first.</p>
+    </div>
+
+    <div class="card">
+      <h2>{{ t('report_title') }}</h2>
+      <p class="sub">{{ t('report_sub') }}</p>
+      <p><a class="btn" href="{{ url_for('citizen_report') }}">{{ t('report_title') }}</a> &nbsp; <a class="btn btn-white" href="{{ url_for('track_report') }}">{{ t('nav_track') }}</a></p>
+      <p class="hint">Works offline too: if you lose connection, the report is saved on your phone and sent when you are back online.</p>
+    </div>
+
+    <div class="card">
+      <h2>{{ t('gps_title') }}</h2>
+      <p class="sub">{{ t('gps_sub') }}</p>
+      <button class="btn btn-block" id="gps-btn" type="button">{{ t('gps_button') }}</button>
+      <p class="hint">Your browser will ask for permission. If you say no, you can still search the map above.</p>
+      <div id="gps-result" style="margin-top:14px"></div>
+      <div id="gps-error" class="gps-error" style="display:none; margin-top:14px"></div>
+    </div>
+
+    <div class="card">
+      <h2>{{ t('alerts_title') }}</h2>
+      <p class="sub">{{ t('alerts_sub') }}</p>
+      <div id="active-alerts-list">
+      {% if alerts %}
+        {% for a in alerts %}
+        <div class="alert-item sev-border-{{ a.severity }}" data-alert-id="{{ a.id }}">
+          <h3>{{ a.title }}</h3>
+          <div class="meta">
+            <span class="sev sev-{{ a.severity }}">{{ a.severity }}</span>
+            &nbsp;{{ a.disaster_type }} &nbsp;·&nbsp; {{ a.created_at }} UTC
+          </div>
+          <p>{{ a.message }}</p>
+          <p class="meta">SAFE: <strong id="safe-count-{{ a.id }}">{{ checkin_counts.get(a.id, {}).get('SAFE', 0) }}</strong> &nbsp;·&nbsp; HELP: <strong id="help-count-{{ a.id }}">{{ checkin_counts.get(a.id, {}).get('HELP', 0) }}</strong></p>
+          <p>
+            <button class="btn btn-sm" type="button" data-checkin="SAFE" data-alert-id="{{ a.id }}">I am SAFE</button>
+            <button class="btn btn-sm btn-red" type="button" data-checkin="HELP" data-alert-id="{{ a.id }}">I need HELP</button>
+          </p>
+        </div>
+        {% endfor %}
+      {% else %}
+        <p class="empty">No alerts yet. When an admin broadcasts an alert, it will appear here - and only citizens on the selected towers will be reached.</p>
+      {% endif %}
+      </div>
+      <p><a href="{{ url_for('admin_history') }}">See alert history and delivery log</a></p>
+    </div>
+
+    <div class="card">
+      <h2>Get alerts on this device</h2>
+      <p class="sub">Allow notifications and this device will get alerts when a new broadcast is sent for your area.</p>
+      <button class="btn btn-block" id="push-btn" type="button">Enable alerts</button>
+      <p class="push-status" id="push-status">Alerts off. Tap Enable alerts to get alerts on this device.</p>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/home.js') }}"></script>
+<script src="{{ url_for('static', filename='js/phase2.js') }}"></script>
+<script src="{{ url_for('static', filename='js/push.js') }}"></script>
+{% endblock %}

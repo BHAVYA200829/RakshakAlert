@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Admin Login{% endblock %}
+{% block content %}
+<section class="hero">
+  <h1>Admin login</h1>
+  <p>Only admins log in. Citizens never need an account - they get alerts by SMS / Cell Broadcast.</p>
+</section>
+<div style="max-width:460px">
+  <div class="card">
+    <form method="post" action="{{ url_for('admin_login', next=request.args.get('next', '')) }}">
+      <label for="username">Username</label>
+      <input type="text" id="username" name="username" autocomplete="username" required>
+      <label for="password">Password</label>
+      <input type="password" id="password" name="password" autocomplete="current-password" required>
+      <div style="margin-top:18px">
+        <button class="btn btn-block" type="submit">Log in as admin</button>
+      </div>
+    </form>
+    <div class="demo-box">
+      <strong>For demo</strong><br>
+      Username: admin<br>
+      Password: admin123
+    </div>
+  </div>
+</div>
+{% endblock %}

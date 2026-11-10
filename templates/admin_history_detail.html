@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}Delivery Log{% endblock %}
+{% block content %}
+<section class="hero">
+  <h1>{{ alert.title }}</h1>
+  <p><span class="sev sev-{{ alert.severity }}">{{ alert.severity }}</span>
+     &nbsp;{{ alert.disaster_type }} &nbsp;·&nbsp; {{ alert.created_at }} UTC &nbsp;·&nbsp;
+     <strong>{{ citizens_reached }} citizens reached</strong> across {{ towers|length }} tower(s).</p>
+</section>
+
+<div class="card">
+  <h2>Message sent</h2>
+  <div class="msg-preview">{{ alert.message }}</div>
+  <h3 style="margin-top:16px">Towers reached</h3>
+  <p>{{ towers|map(attribute='city')|join(', ') }} ({{ towers|map(attribute='state')|unique|join(', ') }})</p>
+</div>
+
+<div class="card">
+  <h2>Per-recipient delivery log - Simulated SMS</h2>
+  <p class="sub">One row per citizen. Status is SIMULATED in this prototype - no real SMS was sent.</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Citizen</th><th>Phone</th><th>Tower</th><th>Status</th><th>Time (UTC)</th></tr></thead>
+    <tbody>
+      {% for d in deliveries %}
+      <tr>
+        <td>{{ d.citizen_name }}</td>
+        <td>{{ d.phone }}</td>
+        <td>{{ d.city }}, {{ d.state }} ({{ d.tower_name }})</td>
+        <td><span class="sev sev-outline">{{ d.status }}</span></td>
+        <td>{{ d.created_at }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table></div>
+  <p style="margin-top:14px"><a href="{{ url_for('admin_history') }}">&larr; Back to alert history</a> &nbsp;·&nbsp; <a href="{{ url_for('home') }}">View public map</a></p>
+</div>
+{% endblock %}

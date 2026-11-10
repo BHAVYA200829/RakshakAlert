@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+{% block title %}Admin Broadcast{% endblock %}
+{% block content %}
+<section class="hero">
+  <h1>Broadcast an alert</h1>
+  <p>Three steps. Only citizens on the towers you select will receive it - everyone else gets nothing.</p>
+</section>
+
+<div class="steps">
+  <div class="step-tab on" id="tab-1">Step 1 - Select towers</div>
+  <div class="step-tab" id="tab-2">Step 2 - Configure alert</div>
+  <div class="step-tab" id="tab-3">Step 3 - Review &amp; broadcast</div>
+</div>
+
+<form method="post" action="{{ url_for('admin_broadcast') }}" id="broadcast-form">
+  <!-- STEP 1 -->
+  <div class="step-pane on" id="pane-1">
+    <div class="card">
+      <h2>Select affected towers</h2>
+      <p class="sub">Click a pin on the map, or tick towers in the list. Your nearest tower (from the public map GPS button) is pre-selected if you used it.</p>
+      <div class="toolbar">
+        <div class="field">
+          <label for="admin-search">Search a city or tower</label>
+          <input type="text" id="admin-search" placeholder="Type a city, e.g. Nashik">
+        </div>
+        <div class="field">
+          <label for="admin-state">Filter by state</label>
+          <select id="admin-state">
+            <option value="">All states</option>
+            {% for s in states %}<option value="{{ s }}">{{ s }}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="field">
+          <label>&nbsp;</label>
+          <button class="btn btn-white" type="button" id="clear-selection">Clear selection</button>
+        </div>
+      </div>
+      <div id="map-admin"></div>
+      <p class="map-note">Click a pin to select / deselect that tower. Selected pins turn red.</p>
+      <div class="selected-bar" id="selected-bar">0 towers selected - 0 citizens will be reached</div>
+      <div class="toolbar">
+        <div class="field">
+          <label for="state-bulk">Select all towers in one state</label>
+          <select id="state-bulk">
+            <option value="">Choose a state…</option>
+            {% for s in states %}<option value="{{ s }}">{{ s }}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="field">
+          <label>&nbsp;</label>
+          <button class="btn" type="button" id="select-state-btn">Select all in state</button>
+        </div>
+      </div>
+      <div class="tower-list" id="tower-list">
+        {% for t in towers %}
+        <label class="tower-row" data-city="{{ t.city|lower }} {{ t.name|lower }}" data-state="{{ t.state }}">
+          <input type="checkbox" name="tower_ids" value="{{ t.id }}" data-citizens="8">
+          <span><span class="t-city">{{ t.city }}</span> - {{ t.name }}<br>
+          <span class="t-state">{{ t.state }} · {{ t.code }}</span></span>
+          <span class="t-count">8 citizens</span>
+        </label>
+        {% endfor %}
+      </div>
+      <div class="step-nav">
+        <span class="spacer"></span>
+        <button class="btn" type="button" id="to-step-2">Continue to Step 2</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 2 -->
+  <div class="step-pane" id="pane-2">
+    <div class="card">
+      <h2>Configure the alert</h2>
+      <p class="sub">Pick a disaster type - the severity and message fill in automatically. You can change both before sending.</p>
+      <label>Disaster type</label>
+      <div class="type-grid" id="type-grid">
+        {% for dtype, (sev, tmpl) in disaster_types.items() %}
+        <label><input type="radio" name="disaster_type" value="{{ dtype }}" data-severity="{{ sev }}" data-template="{{ tmpl }}"> {{ dtype }}</label>
+        {% endfor %}
+      </div>
+
+      <label>Severity</label>
+      <div class="sev-picker" id="sev-picker">
+        {% for sev in ["Green", "Yellow", "Orange", "Red"] %}
+        <label><input type="radio" name="severity" value="{{ sev }}"> {{ sev }}</label>
+        {% endfor %}
+      </div>
+      <p class="hint">Green = safe / information &nbsp;·&nbsp; Yellow = moderate &nbsp;·&nbsp; Orange = high &nbsp;·&nbsp; Red = extreme</p>
+
+      <label for="title">Alert title</label>
+      <input type="text" id="title" name="title" placeholder="e.g. Flood alert - Mira Road" maxlength="120" required>
+
+      <label for="message">Message (this is what citizens receive)</label>
+      <textarea id="message" name="message" required></textarea>
+      <p class="hint">The template fills in the area name automatically when you reach Step 3. Edit the message freely.</p>
+
+      <div class="step-nav">
+        <button class="btn btn-white" type="button" id="back-to-1">Back to Step 1</button>
+        <span class="spacer"></span>
+        <button class="btn" type="button" id="to-step-3">Continue to Step 3</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 3 -->
+  <div class="step-pane" id="pane-3">
+    <div class="card">
+      <h2>Review before you broadcast</h2>
+      <p class="sub">Check everything. Once you broadcast, a simulated SMS goes to every citizen on the selected towers - and to nobody else.</p>
+      <div class="review-box">
+        <dl>
+          <dt>Towers selected</dt><dd id="review-towers">-</dd>
+          <dt>Citizens reached</dt><dd id="review-citizens">-</dd>
+          <dt>Disaster type</dt><dd id="review-type">-</dd>
+          <dt>Severity</dt><dd id="review-severity">-</dd>
+          <dt>Title</dt><dd id="review-title">-</dd>
+        </dl>
+      </div>
+      <label style="margin-top:16px">Message preview</label>
+      <div class="msg-preview" id="review-message">-</div>
+      <p class="hint" style="margin-top:12px">Delivery is <strong>Simulated SMS</strong> in this Phase 1 prototype. No real SMS or email is sent. A per-recipient delivery log is written for every citizen reached.</p>
+      <div class="step-nav">
+        <button class="btn btn-white" type="button" id="back-to-2">Back to Step 2</button>
+        <span class="spacer"></span>
+        <button class="btn btn-red" type="submit">Broadcast now</button>
+      </div>
+    </div>
+  </div>
+</form>
+{% endblock %}
+{% block scripts %}
+<script>
+  const DISASTER_TEMPLATES = {
+    {% for dtype, (sev, tmpl) in disaster_types.items() %}
+    {{ dtype|tojson }}: {{ tmpl|tojson }}{% if not loop.last %},{% endif %}
+    {% endfor %}
+  };
+  const DISASTER_SEVERITY = {
+    {% for dtype, (sev, tmpl) in disaster_types.items() %}
+    {{ dtype|tojson }}: {{ sev|tojson }}{% if not loop.last %},{% endif %}
+    {% endfor %}
+  };
+</script>
+<script src="{{ url_for('static', filename='js/broadcast.js') }}"></script>
+{% endblock %}

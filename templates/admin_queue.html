@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}Incident Queue{% endblock %}
+{% block content %}
+<section class="hero">
+  <h1>Incident Queue</h1>
+  <p>Reports from the same tower and disaster type are grouped into one incident. Most urgent first. SOS items are urgent and shown in red.</p>
+  <p><strong>{{ sos_total }} SOS signal(s) received in total.</strong></p>
+</section>
+{% if items %}
+  {% for g in items %}
+  <div class="card">
+    <h2>{{ g.city }} - {{ g.disaster_type }}</h2>
+    <p class="sub">{{ g.tower_name }} · {{ g.state }} · First report {{ g.first_at }} UTC · Latest {{ g.last_at }} UTC</p>
+    <p><strong>Urgency score: {{ g.urgency }}</strong> &nbsp;·&nbsp; {{ g.reports|length }} report(s) &nbsp;·&nbsp; {{ g.open_count }} open &nbsp;·&nbsp; {{ g.sos_count }} SOS &nbsp;·&nbsp; {{ g.help_count }} HELP &nbsp;·&nbsp; {{ g.safe_count }} SAFE &nbsp;·&nbsp; Severity {{ g.severity }}</p>
+    {% if g.sos_count %}<p><span class="sev sev-Red">SOS - urgent</span> {{ g.sos_count }} SOS signal(s) from this tower.</p>{% endif %}
+    <div class="table-wrap"><table>
+      <thead><tr><th>Tracking ID</th><th>What happened</th><th>Status</th><th>Reported (UTC)</th><th>Actions</th></tr></thead>
+      <tbody>
+        {% for r in g.reports %}
+        <tr>
+          <td><strong>{{ r.tracking_id }}</strong>{% if r.photo_filename %}<br><span style="color:#5b5b5b">Photo: {{ r.photo_filename }}</span>{% endif %}</td>
+          <td>{{ r.description }}{% if r.name %}<br><span style="color:#5b5b5b">{{ r.name }}{% if r.phone %} · {{ r.phone }}{% endif %}</span>{% endif %}</td>
+          <td><span class="sev sev-outline">{{ r.status }}</span></td>
+          <td>{{ r.created_at }}</td>
+          <td>
+            {% if r.status == 'Open' %}
+            <form method="post" action="{{ url_for('admin_ack_report', report_id=r.id) }}" style="display:inline"><button class="btn btn-sm" type="submit">Acknowledge</button></form>
+            {% endif %}
+            {% if r.status != 'Resolved' %}
+            <form method="post" action="{{ url_for('admin_resolve_report', report_id=r.id) }}" style="display:inline"><button class="btn btn-sm" type="submit">Resolve</button></form>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table></div>
+    {% if g.reports %}
+    <div class="step-nav">
+      <form method="post" action="{{ url_for('admin_queue_bulk') }}">
+        <input type="hidden" name="tower_id" value="{{ g.tower_id }}">
+        <input type="hidden" name="disaster_type" value="{{ g.disaster_type }}">
+        <button class="btn btn-sm" type="submit" name="action" value="acknowledge">Acknowledge all</button>
+        <button class="btn btn-sm btn-red" type="submit" name="action" value="resolve">Resolve all</button>
+      </form>
+    </div>
+    {% endif %}
+  </div>
+  {% endfor %}
+{% else %}
+<div class="card"><p class="empty">No reports yet. When a citizen reports an incident or sends an SOS, it will appear here grouped by tower.</p></div>
+{% endif %}
+{% endblock %}

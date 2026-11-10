@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+{% block title %}Analytics{% endblock %}
+{% block content %}
+<section class="hero">
+  <h1>Analytics dashboard</h1>
+  <p>Live numbers from the database. Nothing here is hardcoded. All messages are Simulated SMS in this prototype.</p>
+</section>
+
+<div class="stats">
+  <div class="stat"><div class="num">{{ totals.alerts }}</div><div class="label">Alerts sent</div></div>
+  <div class="stat"><div class="num">{{ totals.reports }}</div><div class="label">Citizen reports</div></div>
+  <div class="stat"><div class="num">{{ totals.sos }}</div><div class="label">SOS signals</div></div>
+  <div class="stat red"><div class="num">{{ totals.deliveries }}</div><div class="label">Simulated SMS sent</div></div>
+  <div class="stat"><div class="num">{{ totals.citizens }}</div><div class="label">Citizens covered</div></div>
+  <div class="stat"><div class="num">{{ totals.towers }}</div><div class="label">Towers</div></div>
+  <div class="stat"><div class="num">{{ totals.safe }}</div><div class="label">SAFE check-ins</div></div>
+  <div class="stat"><div class="num">{{ totals.help }}</div><div class="label">HELP check-ins</div></div>
+</div>
+
+<div class="card">
+  <h2>Download data (CSV)</h2>
+  <p class="sub">Real rows from the database, with a date in the file name.</p>
+  <p>
+    <a class="btn" href="{{ url_for('admin_export', kind='alerts') }}">Download alerts CSV</a>
+    <a class="btn" href="{{ url_for('admin_export', kind='reports') }}">Download reports CSV</a>
+    <a class="btn" href="{{ url_for('admin_export', kind='deliveries') }}">Download deliveries CSV</a>
+  </p>
+</div>
+
+<div class="analytics-grid">
+  <div class="card">
+    <h2>Alerts by disaster type</h2>
+    {% if by_type %}
+      {% for row in by_type %}
+      <div class="bar-row">
+        <span class="bar-label">{{ row.label }}</span>
+        <span class="bar-track"><span class="bar-fill" style="width: {{ row.pct }}%"></span></span>
+        <span class="bar-num">{{ row.count }}</span>
+      </div>
+      {% endfor %}
+    {% else %}
+      <p class="empty">No alerts yet.</p>
+    {% endif %}
+  </div>
+
+  <div class="card">
+    <h2>Alerts by severity</h2>
+    {% if by_severity %}
+      {% for row in by_severity %}
+      <div class="bar-row">
+        <span class="bar-label"><span class="sev sev-{{ row.label }}">{{ row.label }}</span></span>
+        <span class="bar-track"><span class="bar-fill sev-fill-{{ row.label }}" style="width: {{ row.pct }}%"></span></span>
+        <span class="bar-num">{{ row.count }}</span>
+      </div>
+      {% endfor %}
+    {% else %}
+      <p class="empty">No alerts yet.</p>
+    {% endif %}
+  </div>
+
+  <div class="card">
+    <h2>Reports by status</h2>
+    {% if by_status %}
+      {% for row in by_status %}
+      <div class="bar-row">
+        <span class="bar-label">{{ row.label }}</span>
+        <span class="bar-track"><span class="bar-fill" style="width: {{ row.pct }}%"></span></span>
+        <span class="bar-num">{{ row.count }}</span>
+      </div>
+      {% endfor %}
+    {% else %}
+      <p class="empty">No reports yet.</p>
+    {% endif %}
+  </div>
+
+  <div class="card">
+    <h2>Deliveries by status</h2>
+    {% if by_delivery_status %}
+      {% for row in by_delivery_status %}
+      <div class="bar-row">
+        <span class="bar-label">{{ row.label }}</span>
+        <span class="bar-track"><span class="bar-fill" style="width: {{ row.pct }}%"></span></span>
+        <span class="bar-num">{{ row.count }}</span>
+      </div>
+      {% endfor %}
+    {% else %}
+      <p class="empty">No deliveries yet.</p>
+    {% endif %}
+  </div>
+</div>
+
+<div class="card">
+  <h2>Alerts by state (top 10)</h2>
+  {% if by_state %}
+  <div class="table-wrap"><table>
+    <thead><tr><th>State</th><th>Alerts</th><th>Share</th></tr></thead>
+    <tbody>
+      {% for row in by_state %}
+      <tr>
+        <td><strong>{{ row.label }}</strong></td>
+        <td>{{ row.count }}</td>
+        <td>
+          <span class="bar-track bar-track-inline"><span class="bar-fill" style="width: {{ row.pct }}%"></span></span>
+          {{ row.pct }}%
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table></div>
+  {% else %}
+    <p class="empty">No alerts yet.</p>
+  {% endif %}
+</div>
+{% endblock %}

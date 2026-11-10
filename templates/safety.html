@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}Safety Guide{% endblock %}
+{% block content %}
+<section class="hero">
+  <h1>Safety Guide</h1>
+  <p>One page per disaster type: what to do Before, During and After. In an emergency, call <strong>112</strong>. NDMA Helpline: <strong>1078</strong>.</p>
+</section>
+<div class="grid-2">
+  {% for slug, item in guides.items() %}
+  <div class="card">
+    <h2>{{ item.title }}</h2>
+    <p class="sub">Before, During and After, in short clear steps.</p>
+    <p><a class="btn" href="{{ url_for('safety_detail', slug=slug) }}">Open {{ item.title }} guide</a></p>
+  </div>
+  {% endfor %}
+</div>
+<p class="hint">Safety content is in English. Headings and buttons follow the language switcher where translated. The full guide is always available in English.</p>
+{% endblock %}

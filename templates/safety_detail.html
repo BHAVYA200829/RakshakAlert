@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}{{ guide.title }} Safety Guide{% endblock %}
+{% block content %}
+<section class="hero">
+  <h1>{{ guide.title }} safety guide</h1>
+  <p>What to do Before, During and After a {{ guide.title|lower }}. In an emergency, call <strong>112</strong>. NDMA Helpline: <strong>1078</strong>.</p>
+</section>
+<p><a class="btn btn-white" href="{{ url_for('safety_guide') }}">Back to Safety Guide</a> &nbsp; <a class="btn" href="{{ url_for('citizen_report') }}">Report an incident</a></p>
+<div class="card">
+  <h2>Before</h2>
+  <ul>{% for line in guide.before %}<li>{{ line }}</li>{% endfor %}</ul>
+</div>
+<div class="card">
+  <h2>During</h2>
+  <ul>{% for line in guide.during %}<li>{{ line }}</li>{% endfor %}</ul>
+</div>
+<div class="card">
+  <h2>After</h2>
+  <ul>{% for line in guide.after %}<li>{{ line }}</li>{% endfor %}</ul>
+</div>
+<div class="card">
+  <h2>Related alert</h2>
+  <p class="sub">See active {{ guide.title|lower }} alerts on the map, or report what you see.</p>
+  <p><a class="btn" href="{{ url_for('home') }}">Open the live map</a></p>
+</div>
+{% endblock %}
